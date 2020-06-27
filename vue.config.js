@@ -1,4 +1,7 @@
-const vueTasks = [[3, 1]];
+const vueTasks = [
+  [3, 1],
+  [3, 2],
+];
 
 const pages = Object.fromEntries(
   vueTasks.map(([module, task]) => [
