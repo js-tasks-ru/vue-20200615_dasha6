@@ -67,7 +67,16 @@ export default {
     },
 
     currentTitle() {
-      return this.value ? `${this.title} - ${this.value}` : this.title;
+      let currentText = '';
+      if (this.value) {
+        currentText = this.options.find(
+          (item) => item.value === this.value,
+          this,
+        );
+        return `${this.title} - ${currentText.text}`;
+      } else {
+        return this.title;
+      }
     },
   },
 
