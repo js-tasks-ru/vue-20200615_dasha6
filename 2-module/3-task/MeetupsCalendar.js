@@ -31,17 +31,11 @@ export const MeetupsCalendar = {
         </div>
       </div>
       <div class="rangepicker__date-grid">
-        <div class="rangepicker__cell rangepicker__cell_inactive">28</div>
-        <div class="rangepicker__cell rangepicker__cell_inactive">29</div>
-        <div class="rangepicker__cell rangepicker__cell_inactive">30</div>
-        <div class="rangepicker__cell rangepicker__cell_inactive">31</div>
-        <div class="rangepicker__cell">
-          1
-          <a class="rangepicker__event">Митап</a>
-          <a class="rangepicker__event">Митап</a>
-        </div>
-        <div class="rangepicker__cell">2</div>
-        <div class="rangepicker__cell">3</div>
+        <div
+          v-for="day in daysArr"
+          class="rangepicker__cell"
+          :class="day.month !== strCurMonth ? 'rangepicker__cell_inactive' : ''"
+        >{{day.day}}</div>
       </div>
     </div>
   </div>`,
@@ -58,12 +52,13 @@ export const MeetupsCalendar = {
     return {
       currentDate: new Date(),
       strCurMonthAndYear: '',
+      strCurMonth: '',
     };
   },
 
   mounted() {
     this.strCurMonthAndYear = this.currentMonthAndYear();
-    this.daysArr();
+    // this.daysArr();
   },
 
   computed: {
@@ -74,34 +69,39 @@ export const MeetupsCalendar = {
     // currentYear() {
     //   return this.currentDate.getFullYear();
     // },
-  },
-
-  methods: {
+    strCurMonth() {
+      return this.currentDate.toLocaleString('ru', {
+        month: 'long',
+      });
+    },
     daysArr() {
+      // задаоем 1ое число, чтобы узнать его день недели
       let firstDayCalendar = new Date(this.currentDate.setDate(1));
       console.log('firstDayCalendar', firstDayCalendar);
       let numberWeekday = firstDayCalendar.getDay();
-
+      // получаем строку с предыдущем месяцем
       const prevMonth = strMonth(this.currentDate, -1);
       let resultArr = [];
       console.log('numberWeekday', numberWeekday);
-      while (numberWeekday !== 0) {
-        const currDay = firstDayCalendar.getDate();
-        resultArr.unshift({ day: currDay, month: prevMonth });
-        firstDayCalendar.setDate(currDay - 1);
+      // добавляем дни из предыдущего месяца, пока не найдем пн
+      while (numberWeekday !== 1) {
+        firstDayCalendar.setDate(firstDayCalendar.getDate() - 1);
+        resultArr.unshift({
+          day: firstDayCalendar.getDate(),
+          month: prevMonth,
+        });
         numberWeekday = firstDayCalendar.getDay();
       }
-      console.log('resultArr', resultArr);
+      // узнаем число дней в текущем месяце
       const numMonthDays = monthDays(this.currentDate);
-      console.log('numMonthDays', numMonthDays);
-
-      const currMonth = this.currentDate.toLocaleString('ru', {
-        month: 'long',
-      });
-      for (let i = 2; i < numMonthDays; i++) {
-        resultArr.push({ day: i, month: currMonth });
+      // добавляем дни текущего месяца
+      // const currMonth = this.currentDate.toLocaleString('ru', {
+      //   month: 'long',
+      // });
+      for (let i = 1; i < numMonthDays; i++) {
+        resultArr.push({ day: i, month: this.strCurMonth });
       }
-
+      // добавляем дни следующего месяца
       const nextMonth = strMonth(this.currentDate, 1);
       let currDayCalendar = new Date(this.currentDate.setDate(numMonthDays));
       while (resultArr.length !== 35) {
@@ -110,8 +110,11 @@ export const MeetupsCalendar = {
         currDayCalendar.setDate(currDay + 1);
       }
       console.log('resultArr', resultArr);
+      return resultArr;
     },
+  },
 
+  methods: {
     previousMonth() {
       console.log('previousMonth');
       this.currentDate.setMonth(this.currentDate.getMonth() - 1);
