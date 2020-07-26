@@ -1,10 +1,47 @@
 <template>
-  <button class="button">content</button>
+  <button
+    v-if="tag === 'button'"
+    class="button"
+    :class="{ button_block: block }"
+    v-on="$listeners"
+  >
+    <slot></slot>
+  </button>
+  <a
+    v-else-if="tag === 'a'"
+    class="button"
+    :class="{ button_block: block }"
+    v-on="$listeners"
+  >
+    <slot></slot>
+  </a>
+  <router-link
+    v-else-if="tag === 'router-link'"
+    class="button"
+    :class="{ button_block: block }"
+    v-on="$listeners"
+  >
+    <slot></slot>
+  </router-link>
 </template>
 
 <script>
 export default {
   name: 'BaseButton',
+
+  props: {
+    block: {
+      type: Boolean,
+    },
+    tag: {
+      type: String,
+      default: 'button',
+      validator: function (value) {
+        // Значение должно соответствовать одной из этих строк
+        return ['button', 'a', 'router-link'].indexOf(value) !== -1;
+      },
+    },
+  },
 };
 </script>
 
