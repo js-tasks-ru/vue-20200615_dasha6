@@ -37,8 +37,67 @@ export const MeetupsCalendar = {
           </a>
         </div>
       </div>
-    </div>
-  </div>`,
+    </div>`,
+
+  props: {
+    meetups: {
+      type: Array,
+      required: true,
+    },
+  },
+
+  data() {
+    return {
+      currentDate: new Date(),
+    };
+  },
+
+  computed: {
+    firstDateOfCurrentMonth() {
+      return getFirstDateOfMonth(this.currentDate);
+    },
+
+    meetupsByDate() {
+      const result = {};
+      this.meetups.forEach((meetup) => {
+        const dateString = new Date(meetup.date).toDateString();
+        if (!result[dateString]) {
+          result[dateString] = [meetup];
+        } else {
+          result[dateString].push(meetup);
+        }
+      });
+      return result;
+    },
+
+    calendarCells() {
+      const firstDateOfNextMonth = getFirstDateOfMonth(
+        addMonth(this.currentDate, 1),
+      );
+      const lastDateOfMonth = subtractDays(firstDateOfNextMonth, 1);
+      const startDate = subtractDays(
+        this.firstDateOfCurrentMonth,
+        getWeekday(this.firstDateOfCurrentMonth) - 1,
+      );
+      const finishDate = addDays(
+        lastDateOfMonth,
+        7 - getWeekday(lastDateOfMonth),
+      );
+      const cells = [];
+
+      for (
+        let dayOfCalendar = startDate;
+        dayOfCalendar <= finishDate;
+        dayOfCalendar.setDate(dayOfCalendar.getDate() + 1)
+      ) {
+        cells.push({
+          id: Number(dayOfCalendar),
+          date: dayOfCalendar.getDate(),
+          isCurrentMonth:
+            dayOfCalendar.getMonth() === this.currentDate.getMonth(),
+          meetups: this.meetupsByDate[dayOfCalendar.toDateString()],
+        });
+      }
 
   // Пропсы
   props: {
