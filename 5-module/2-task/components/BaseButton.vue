@@ -1,28 +1,12 @@
 <template>
-  <button
-    v-if="tag === 'button'"
+  <component
+    v-bind:is="tag"
     class="button"
     :class="{ button_block: block }"
     v-on="$listeners"
   >
     <slot></slot>
-  </button>
-  <a
-    v-else-if="tag === 'a'"
-    class="button"
-    :class="{ button_block: block }"
-    v-on="$listeners"
-  >
-    <slot></slot>
-  </a>
-  <router-link
-    v-else-if="tag === 'router-link'"
-    class="button"
-    :class="{ button_block: block }"
-    v-on="$listeners"
-  >
-    <slot></slot>
-  </router-link>
+  </component>
 </template>
 
 <script>
