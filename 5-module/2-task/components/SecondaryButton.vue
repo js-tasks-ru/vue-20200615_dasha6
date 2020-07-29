@@ -1,10 +1,17 @@
 <template>
-  <button></button>
+  <base-button v-bind="$attrs" v-on="$listeners" class="button_secondary">
+    <slot />
+  </base-button>
 </template>
 
 <script>
+import BaseButton from './BaseButton';
+
 export default {
   name: 'SecondaryButton',
+  inheritAttrs: false,
+
+  components: { BaseButton },
 };
 </script>
 
