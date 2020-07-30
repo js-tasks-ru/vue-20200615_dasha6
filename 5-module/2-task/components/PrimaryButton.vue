@@ -1,6 +1,6 @@
 <template>
-  <base-button class="button_primary" v-bind="$attrs" v-on="$listeners">
-    <slot></slot>
+  <base-button v-bind="$attrs" v-on="$listeners" class="button_primary">
+    <slot />
   </base-button>
 </template>
 
@@ -9,6 +9,8 @@ import BaseButton from './BaseButton';
 
 export default {
   name: 'PrimaryButton',
+  inheritAttrs: false,
+
   components: { BaseButton },
 };
 </script>

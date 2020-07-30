@@ -1,11 +1,11 @@
 <template>
   <component
-    v-bind:is="tag"
+    :is="tag"
     class="button"
-    :class="{ button_block: block }"
     v-on="$listeners"
+    :class="{ button_block: block }"
   >
-    <slot></slot>
+    <slot />
   </component>
 </template>
 
@@ -14,17 +14,12 @@ export default {
   name: 'BaseButton',
 
   props: {
-    block: {
-      type: Boolean,
-    },
     tag: {
       type: String,
       default: 'button',
-      validator: function (value) {
-        // Значение должно соответствовать одной из этих строк
-        return ['button', 'a', 'router-link'].indexOf(value) !== -1;
-      },
+      validator: (tag) => ['button', 'a', 'router-link'].includes(tag),
     },
+    block: Boolean,
   },
 };
 </script>
