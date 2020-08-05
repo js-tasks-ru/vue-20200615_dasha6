@@ -1,18 +1,93 @@
 <template>
   <div
-    class="input-group input-group_icon input-group_icon-left input-group_icon-right"
+    class="input-group"
+    :class="{
+      'input-group_icon': hasLeftIcon || hasRightIcon,
+      'input-group_icon-left': hasLeftIcon,
+      'input-group_icon-right': hasRightIcon,
+    }"
   >
-    <img class="icon" />
-
-    <input class="form-control form-control_rounded form-control_sm" />
-
-    <img class="icon" />
+    <slot name="left-icon" />
+    <textarea
+      v-if="multiline"
+      v-model="localValue"
+      v-bind="$attrs"
+      v-on="inputListeners"
+      class="form-control"
+      :class="{
+        'form-control_sm': small,
+        'form-control_rounded': rounded,
+      }"
+    />
+    <input
+      v-else
+      v-model="localValue"
+      v-bind="$attrs"
+      v-on="inputListeners"
+      class="form-control"
+      :class="{
+        'form-control_sm': small,
+        'form-control_rounded': rounded,
+      }"
+    />
+    <slot name="right-icon" />
   </div>
 </template>
 
 <script>
 export default {
   name: 'AppInput',
+
+  inheritAttrs: false,
+
+  props: {
+    small: Boolean,
+    rounded: Boolean,
+    multiline: Boolean,
+    value: String,
+  },
+
+  data() {
+    return {
+      localValue: this.value,
+    };
+  },
+
+  watch: {
+    value(value) {
+      this.localValue = value;
+    },
+  },
+
+  computed: {
+    inputListeners: function () {
+      var vm = this;
+      // `Object.assign` объединяет объекты вместе, чтобы получить новый объект
+      return Object.assign({},
+        // Мы добавляем все слушатели из родителя
+        this.$listeners,
+        // Затем мы можем добавить собственные слушатели или
+        // перезаписать поведение некоторых существующих.
+        {
+          // Это обеспечит, что будет работать v-model на компоненте
+          input: function (event) {
+            vm.$emit('input', event.target.value);
+          },
+          change: function (event) {
+            vm.$emit('change', event.target.value);
+          },
+        },
+      );
+    },
+
+    hasLeftIcon() {
+      return this.$slots.hasOwnProperty('left-icon');
+    },
+
+    hasRightIcon() {
+      return this.$slots.hasOwnProperty('right-icon');
+    },
+  },
 };
 </script>
 

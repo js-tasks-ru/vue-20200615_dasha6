@@ -1,49 +1,46 @@
-/** Короткий псевдоним для создания Date (клонирования, преобразования) */
-const mkDate = (date) => new Date(date);
-/** Получение дня недели числом от 1 (ПН) до 7 (ВС) из даты {Date} */
-const getWeekday = (date) => date.getDay() || 7;
-/** Увеличение и уменьшение даты на определённое число дней или месяцев */
-const addDays = (date, days) =>
-  mkDate(date.getTime() + 1000 * 60 * 60 * 24 * days);
-const subtractDays = (date, days) => addDays(date, -days);
-const addMonth = (date, n) =>
-  mkDate(mkDate(date).setMonth(date.getMonth() + n));
-const subtractMonth = (date, n) => addMonth(date, -n);
-/** Получение первой даты месяца */
-const getFirstDateOfMonth = (date) => mkDate(mkDate(date).setDate(1));
+/*
+  Полезные функции по работе с датой можно описать вне Vue компонента
+ */
+function monthDays(currDate) {
+  const d = new Date(currDate.getFullYear(), currDate.getMonth() + 1, 0);
+  return d.getDate();
+}
+
+function strMonth(currDate, ratio) {
+  const d = new Date(currDate.getFullYear(), currDate.getMonth() + ratio, 1);
+  return d.toLocaleString('ru', { month: 'long' });
+}
 
 export const MeetupsCalendar = {
   name: 'MeetupsCalendar',
 
-  template: `
-    <div class="rangepicker">
-      <div class="rangepicker__calendar">
-        <div class="rangepicker__month-indicator">
-          <div class="rangepicker__selector-controls">
-            <button class="rangepicker__selector-control-left" @click="setPreviousMonth"></button>
-            <div>{{ localeCurrentMonthAndYear }}</div>
-            <button class="rangepicker__selector-control-right" @click="setNextMonth"></button>
-          </div>
-        </div>
-        <div class="rangepicker__date-grid">
-          <div
-            v-for="cell in calendarCells"
-            :key="cell.id"
-            class="rangepicker__cell"
-            :class="{ rangepicker__cell_inactive: !cell.isCurrentMonth }"
-          >
-            {{ cell.date }}
-            <a
-              v-for="meetup in cell.meetups"
-              :key="meetup.id"
-              href="#"
-              class="rangepicker__event"
-            >{{ meetup.title }}</a>
-          </div>
+  template: `<div class="rangepicker">
+    <div class="rangepicker__calendar">
+      <div class="rangepicker__month-indicator">
+        <div class="rangepicker__selector-controls">
+          <button class="rangepicker__selector-control-left" @click="previousMonth"></button>
+          <div>{{currentMonthAndYear}}</div>
+          <button class="rangepicker__selector-control-right" @click="nextMonth"></button>
         </div>
       </div>
-    </div>`,
+      <div class="rangepicker__date-grid">
+        <div
+          v-for="day in daysArr"
+          class="rangepicker__cell"
+          :class="day.month !== strCurMonth ? 'rangepicker__cell_inactive' : ''"
+        >
+          {{day.day}}
+          <a 
+            v-for="meetup in day.meetups"
+            class="rangepicker__event"
+          >{{meetup.title}}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>`,
 
+  // Пропсы
   props: {
     meetups: {
       type: Array,
@@ -51,18 +48,21 @@ export const MeetupsCalendar = {
     },
   },
 
-  data() {
+  data: function () {
     return {
       currentDate: new Date(),
     };
   },
 
   computed: {
-    firstDateOfCurrentMonth() {
-      return getFirstDateOfMonth(this.currentDate);
+    currentMonthAndYear() {
+      const month = this.currentDate.toLocaleString(navigator.language, {
+        month: 'long',
+      });
+      return `${month} ${this.currentDate.getFullYear()}`;
     },
 
-    meetupsByDate() {
+    mapMeetups() {
       const result = {};
       this.meetups.forEach((meetup) => {
         const dateString = new Date(meetup.date).toDateString();
@@ -75,52 +75,95 @@ export const MeetupsCalendar = {
       return result;
     },
 
-    calendarCells() {
-      const firstDateOfNextMonth = getFirstDateOfMonth(
-        addMonth(this.currentDate, 1),
-      );
-      const lastDateOfMonth = subtractDays(firstDateOfNextMonth, 1);
-      const startDate = subtractDays(
-        this.firstDateOfCurrentMonth,
-        getWeekday(this.firstDateOfCurrentMonth) - 1,
-      );
-      const finishDate = addDays(
-        lastDateOfMonth,
-        7 - getWeekday(lastDateOfMonth),
-      );
-      const cells = [];
-
-      for (
-        let dayOfCalendar = startDate;
-        dayOfCalendar <= finishDate;
-        dayOfCalendar.setDate(dayOfCalendar.getDate() + 1)
-      ) {
-        cells.push({
-          id: Number(dayOfCalendar),
-          date: dayOfCalendar.getDate(),
-          isCurrentMonth:
-            dayOfCalendar.getMonth() === this.currentDate.getMonth(),
-          meetups: this.meetupsByDate[dayOfCalendar.toDateString()],
-        });
-      }
-
-      return cells;
+    strCurMonth() {
+      return this.currentDate.toLocaleString('ru', {
+        month: 'long',
+      });
     },
 
-    localeCurrentMonthAndYear() {
-      return `${this.currentDate.toLocaleDateString(navigator.language, {
-        month: 'long',
-      })} ${this.currentDate.getFullYear()}`;
+    daysArr() {
+      const startDate = new Date(this.currentDate);
+      // задаоем 1ое число, чтобы узнать его день недели
+      let firstDayCalendar = new Date(startDate.setDate(1));
+      let numberWeekday = firstDayCalendar.getDay();
+      console.log('numberWeekday', numberWeekday);
+      // получаем строку с предыдущем месяцем
+      const prevMonth = strMonth(startDate, -1);
+      let resultArr = [];
+      // добавляем дни из предыдущего месяца, пока не найдем пн
+      while (numberWeekday !== 1) {
+        firstDayCalendar.setDate(firstDayCalendar.getDate() - 1);
+        resultArr.unshift({
+          day: firstDayCalendar.getDate(),
+          month: prevMonth,
+          meetups: this.mapMeetups[firstDayCalendar.toDateString()],
+        });
+        numberWeekday = firstDayCalendar.getDay();
+      }
+      // узнаем число дней в текущем месяце
+      const numMonthDays = monthDays(startDate);
+      let isFebruary = false;
+      if (numMonthDays < 30) {
+        isFebruary = true;
+      }
+      // добавляем дни текущего месяца
+      for (let i = 1; i <= numMonthDays; i++) {
+        resultArr.push({
+          day: i,
+          month: this.strCurMonth,
+          meetups: this.mapMeetups[
+            new Date(startDate.setDate(i)).toDateString()
+          ],
+        });
+      }
+      // добавляем дни следующего месяца
+      const nextMonth = strMonth(startDate, 1);
+      let currDayCalendar = new Date(startDate.setDate(numMonthDays + 1));
+      if (!(isFebruary && resultArr.length === 28)) {
+        if (resultArr.length < 35) {
+          while (resultArr.length < 35) {
+            const currDay = currDayCalendar.getDate();
+            resultArr.push({
+              day: currDay,
+              month: nextMonth,
+              meetups: this.mapMeetups[currDayCalendar.toDateString()],
+            });
+            currDayCalendar.setDate(currDay + 1);
+          }
+        } else if (resultArr.length > 35) {
+          while (resultArr.length < 42) {
+            const currDay = currDayCalendar.getDate();
+            resultArr.push({
+              day: currDay,
+              month: nextMonth,
+              meetups: this.mapMeetups[currDayCalendar.toDateString()],
+            });
+            currDayCalendar.setDate(currDay + 1);
+          }
+        }
+      }
+      return resultArr;
     },
   },
 
   methods: {
-    setPreviousMonth() {
-      this.currentDate = subtractMonth(this.firstDateOfCurrentMonth, 1);
+    previousMonth() {
+      this.currentDate = new Date(
+        this.currentDate.setMonth(this.currentDate.getMonth() - 1),
+      );
     },
-
-    setNextMonth() {
-      this.currentDate = addMonth(this.firstDateOfCurrentMonth, 1);
+    nextMonth() {
+      // ставим 1ое число, потому что если перепрыгивать с 31 можно перепрыгнуть на два месяца
+      this.currentDate = new Date(this.currentDate.setDate(1));
+      this.currentDate = new Date(
+        this.currentDate.setMonth(this.currentDate.getMonth() + 1),
+      );
     },
   },
+
+  // В качестве локального состояния требуется хранить что-то,
+  // что позволит определить текущий показывающийся месяц.
+  // Изначально должен показываться текущий месяц
+  // Вычислимые свойства помогут как с получением списка дней, так и с выводом информации
+  // Методы понадобятся для переключения между месяцами
 };
