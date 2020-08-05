@@ -56,7 +56,9 @@ export const MeetupsCalendar = {
 
   computed: {
     currentMonthAndYear() {
-      const month = this.currentDate.toLocaleString('ru', { month: 'long' });
+      const month = this.currentDate.toLocaleString(navigator.language, {
+        month: 'long',
+      });
       return `${month} ${this.currentDate.getFullYear()}`;
     },
 
@@ -84,6 +86,7 @@ export const MeetupsCalendar = {
       // задаоем 1ое число, чтобы узнать его день недели
       let firstDayCalendar = new Date(startDate.setDate(1));
       let numberWeekday = firstDayCalendar.getDay();
+      console.log('numberWeekday', numberWeekday);
       // получаем строку с предыдущем месяцем
       const prevMonth = strMonth(startDate, -1);
       let resultArr = [];
@@ -99,6 +102,10 @@ export const MeetupsCalendar = {
       }
       // узнаем число дней в текущем месяце
       const numMonthDays = monthDays(startDate);
+      let isFebruary = false;
+      if (numMonthDays < 30) {
+        isFebruary = true;
+      }
       // добавляем дни текущего месяца
       for (let i = 1; i <= numMonthDays; i++) {
         resultArr.push({
@@ -112,25 +119,27 @@ export const MeetupsCalendar = {
       // добавляем дни следующего месяца
       const nextMonth = strMonth(startDate, 1);
       let currDayCalendar = new Date(startDate.setDate(numMonthDays + 1));
-      if (resultArr.length < 35) {
-        while (resultArr.length < 35) {
-          const currDay = currDayCalendar.getDate();
-          resultArr.push({
-            day: currDay,
-            month: nextMonth,
-            meetups: this.mapMeetups[currDayCalendar.toDateString()],
-          });
-          currDayCalendar.setDate(currDay + 1);
-        }
-      } else if (resultArr.length > 35) {
-        while (resultArr.length < 42) {
-          const currDay = currDayCalendar.getDate();
-          resultArr.push({
-            day: currDay,
-            month: nextMonth,
-            meetups: this.mapMeetups[currDayCalendar.toDateString()],
-          });
-          currDayCalendar.setDate(currDay + 1);
+      if (!(isFebruary && resultArr.length === 28)) {
+        if (resultArr.length < 35) {
+          while (resultArr.length < 35) {
+            const currDay = currDayCalendar.getDate();
+            resultArr.push({
+              day: currDay,
+              month: nextMonth,
+              meetups: this.mapMeetups[currDayCalendar.toDateString()],
+            });
+            currDayCalendar.setDate(currDay + 1);
+          }
+        } else if (resultArr.length > 35) {
+          while (resultArr.length < 42) {
+            const currDay = currDayCalendar.getDate();
+            resultArr.push({
+              day: currDay,
+              month: nextMonth,
+              meetups: this.mapMeetups[currDayCalendar.toDateString()],
+            });
+            currDayCalendar.setDate(currDay + 1);
+          }
         }
       }
       return resultArr;
@@ -144,6 +153,8 @@ export const MeetupsCalendar = {
       );
     },
     nextMonth() {
+      // ставим 1ое число, потому что если перепрыгивать с 31 можно перепрыгнуть на два месяца
+      this.currentDate = new Date(this.currentDate.setDate(1));
       this.currentDate = new Date(
         this.currentDate.setMonth(this.currentDate.getMonth() + 1),
       );
