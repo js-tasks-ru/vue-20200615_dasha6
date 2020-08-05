@@ -37,67 +37,8 @@ export const MeetupsCalendar = {
           </a>
         </div>
       </div>
-    </div>`,
-
-  props: {
-    meetups: {
-      type: Array,
-      required: true,
-    },
-  },
-
-  data() {
-    return {
-      currentDate: new Date(),
-    };
-  },
-
-  computed: {
-    firstDateOfCurrentMonth() {
-      return getFirstDateOfMonth(this.currentDate);
-    },
-
-    meetupsByDate() {
-      const result = {};
-      this.meetups.forEach((meetup) => {
-        const dateString = new Date(meetup.date).toDateString();
-        if (!result[dateString]) {
-          result[dateString] = [meetup];
-        } else {
-          result[dateString].push(meetup);
-        }
-      });
-      return result;
-    },
-
-    calendarCells() {
-      const firstDateOfNextMonth = getFirstDateOfMonth(
-        addMonth(this.currentDate, 1),
-      );
-      const lastDateOfMonth = subtractDays(firstDateOfNextMonth, 1);
-      const startDate = subtractDays(
-        this.firstDateOfCurrentMonth,
-        getWeekday(this.firstDateOfCurrentMonth) - 1,
-      );
-      const finishDate = addDays(
-        lastDateOfMonth,
-        7 - getWeekday(lastDateOfMonth),
-      );
-      const cells = [];
-
-      for (
-        let dayOfCalendar = startDate;
-        dayOfCalendar <= finishDate;
-        dayOfCalendar.setDate(dayOfCalendar.getDate() + 1)
-      ) {
-        cells.push({
-          id: Number(dayOfCalendar),
-          date: dayOfCalendar.getDate(),
-          isCurrentMonth:
-            dayOfCalendar.getMonth() === this.currentDate.getMonth(),
-          meetups: this.meetupsByDate[dayOfCalendar.toDateString()],
-        });
-      }
+    </div>
+  </div>`,
 
   // Пропсы
   props: {
@@ -171,14 +112,26 @@ export const MeetupsCalendar = {
       // добавляем дни следующего месяца
       const nextMonth = strMonth(startDate, 1);
       let currDayCalendar = new Date(startDate.setDate(numMonthDays + 1));
-      while (resultArr.length < 42) {
-        const currDay = currDayCalendar.getDate();
-        resultArr.push({
-          day: currDay,
-          month: nextMonth,
-          meetups: this.mapMeetups[currDayCalendar.toDateString()],
-        });
-        currDayCalendar.setDate(currDay + 1);
+      if (resultArr.length < 35) {
+        while (resultArr.length < 35) {
+          const currDay = currDayCalendar.getDate();
+          resultArr.push({
+            day: currDay,
+            month: nextMonth,
+            meetups: this.mapMeetups[currDayCalendar.toDateString()],
+          });
+          currDayCalendar.setDate(currDay + 1);
+        }
+      } else if (resultArr.length > 35) {
+        while (resultArr.length < 42) {
+          const currDay = currDayCalendar.getDate();
+          resultArr.push({
+            day: currDay,
+            month: nextMonth,
+            meetups: this.mapMeetups[currDayCalendar.toDateString()],
+          });
+          currDayCalendar.setDate(currDay + 1);
+        }
       }
       return resultArr;
     },
