@@ -18,5 +18,10 @@ export const router = new VueRouter({
       path: '/page-b',
       component: PageB,
     },
+    {
+      // сопоставляется со всем
+      path: '*',
+      component: NotFoundPage,
+    }
   ],
 });
