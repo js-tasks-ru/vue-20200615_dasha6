@@ -14,7 +14,10 @@ export function scrollBehavior(to, from, savedPosition) {
     return savedPosition;
   }
 
-  if (to.matched.every((m) => m.meta.saveScrollPosition)) {
+  if (
+    to.matched.some((m) => m.meta.saveScrollPosition) &&
+    from.matched.some((m) => m.meta.saveScrollPosition)
+  ) {
     return false;
   }
 
